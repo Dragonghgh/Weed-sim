@@ -1,0 +1,442 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Weed Simulator</title>
+    <style>
+        body {
+            font-family: 'Arial', sans-serif;
+            background-color: #1a1a1a;
+            color: #fff;
+            max-width: 800px;
+            margin: 0 auto;
+            padding: 20px;
+            text-align: center;
+        }
+        
+        h1 {
+            color: #4CAF50;
+            text-shadow: 0 0 5px rgba(76, 175, 80, 0.5);
+        }
+        
+        .game-container {
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+        
+        .stats {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            display: flex;
+            justify-content: space-around;
+        }
+        
+        .stat {
+            display: flex;
+            flex-direction: column;
+        }
+        
+        .stat-value {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .shop, .inventory {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+        }
+        
+        .items {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 10px;
+            justify-content: center;
+            margin-top: 15px;
+        }
+        
+        .item {
+            background-color: #444;
+            padding: 10px;
+            border-radius: 6px;
+            width: 120px;
+            cursor: pointer;
+            transition: transform 0.2s;
+        }
+        
+        .item:hover {
+            transform: scale(1.05);
+            background-color: #555;
+        }
+        
+        .item-name {
+            font-weight: bold;
+            color: #4CAF50;
+        }
+        
+        .item-price {
+            color: #FFD700;
+        }
+        
+        .item-effect {
+            font-size: 12px;
+            color: #aaa;
+        }
+        
+        .action-button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 5px;
+            cursor: pointer;
+            font-size: 16px;
+            margin: 5px;
+            transition: background-color 0.3s;
+        }
+        
+        .action-button:hover {
+            background-color: #45a049;
+        }
+        
+        .log {
+            background-color: #333;
+            padding: 15px;
+            border-radius: 8px;
+            height: 100px;
+            overflow-y: auto;
+            text-align: left;
+        }
+        
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-bottom: 1px solid #444;
+        }
+        
+        .high {
+            color: #FF9800;
+            font-weight: bold;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0% { opacity: 1; }
+            50% { opacity: 0.5; }
+            100% { opacity: 1; }
+        }
+        
+        .tab-buttons {
+            display: flex;
+            justify-content: center;
+            margin-bottom: 10px;
+        }
+        
+        .tab-button {
+            background-color: #444;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            cursor: pointer;
+            margin: 0 5px;
+        }
+        
+        .tab-button.active {
+            background-color: #4CAF50;
+        }
+        
+        .tab-content {
+            display: none;
+        }
+        
+        .tab-content.active {
+            display: block;
+        }
+    </style>
+</head>
+<body>
+    <h1>Weed Simulator</h1>
+    
+    <div class="game-container">
+        <div class="stats">
+            <div class="stat">
+                <span>Money</span>
+                <span class="stat-value" id="money">$100</span>
+            </div>
+            <div class="stat">
+                <span>Highness</span>
+                <span class="stat-value" id="highness">0%</span>
+            </div>
+            <div class="stat">
+                <span>Stamina</span>
+                <span class="stat-value" id="stamina">100%</span>
+            </div>
+        </div>
+        
+        <div class="tab-buttons">
+            <button class="tab-button active" onclick="openTab('shop')">Shop</button>
+            <button class="tab-button" onclick="openTab('inventory')">Inventory</button>
+            <button class="tab-button" onclick="openTab('actions')">Actions</button>
+        </div>
+        
+        <div id="shop" class="tab-content active">
+            <h2>Weed Shop</h2>
+            <div class="items" id="shop-items">
+                <!-- Items will be added by JavaScript -->
+            </div>
+        </div>
+        
+        <div id="inventory" class="tab-content">
+            <h2>Your Stash</h2>
+            <div class="items" id="inventory-items">
+                <!-- Inventory items will be added by JavaScript -->
+            </div>
+        </div>
+        
+        <div id="actions" class="tab-content">
+            <h2>Actions</h2>
+            <button class="action-button" onclick="work()">Work ($50)</button>
+            <button class="action-button" onclick="rest()">Rest (Recover Stamina)</button>
+            <button class="action-button" onclick="smokeRandom()">Smoke Random</button>
+        </div>
+        
+        <div class="log">
+            <h2>Event Log</h2>
+            <div id="log-entries">
+                <div class="log-entry">Welcome to Weed Simulator!</div>
+            </div>
+        </div>
+    </div>
+    
+    <script>
+        // Game state
+        const gameState = {
+            money: 100,
+            highness: 0,
+            stamina: 100,
+            inventory: {},
+            weedTypes: {
+                'Reggie': {
+                    price: 10,
+                    effect: { high: 10, stamina: -5 },
+                    description: 'Basic stuff, gets the job done'
+                },
+                'Mid': {
+                    price: 25,
+                    effect: { high: 20, stamina: -10 },
+                    description: 'Better quality, better high'
+                },
+                'Dank': {
+                    price: 50,
+                    effect: { high: 35, stamina: -15 },
+                    description: 'Premium quality, strong effects'
+                },
+                'Exotic': {
+                    price: 100,
+                    effect: { high: 50, stamina: -20 },
+                    description: 'Rare strain, intense experience'
+                },
+                'Moon Rocks': {
+                    price: 200,
+                    effect: { high: 75, stamina: -30 },
+                    description: 'The ultimate experience'
+                }
+            }
+        };
+        
+        // Initialize the game
+        function init() {
+            updateStats();
+            renderShop();
+            renderInventory();
+        }
+        
+        // Update the displayed stats
+        function updateStats() {
+            document.getElementById('money').textContent = `$${gameState.money}`;
+            document.getElementById('highness').textContent = `${gameState.highness}%`;
+            document.getElementById('stamina').textContent = `${gameState.stamina}%`;
+            
+            // Add "high" effect if highness is over 50%
+            const highnessElement = document.getElementById('highness');
+            if (gameState.highness >= 50) {
+                highnessElement.classList.add('high');
+            } else {
+                highnessElement.classList.remove('high');
+            }
+        }
+        
+        // Render the shop items
+        function renderShop() {
+            const shopItemsElement = document.getElementById('shop-items');
+            shopItemsElement.innerHTML = '';
+            
+            for (const [name, weed] of Object.entries(gameState.weedTypes)) {
+                const itemElement = document.createElement('div');
+                itemElement.className = 'item';
+                itemElement.innerHTML = `
+                    <div class="item-name">${name}</div>
+                    <div class="item-price">$${weed.price}</div>
+                    <div class="item-effect">+${weed.effect.high}% high</div>
+                    <div class="item-effect">${weed.effect.stamina}% stamina</div>
+                    <div class="item-effect">${weed.description}</div>
+                `;
+                itemElement.addEventListener('click', () => buyWeed(name));
+                shopItemsElement.appendChild(itemElement);
+            }
+        }
+        
+        // Render the inventory
+        function renderInventory() {
+            const inventoryItemsElement = document.getElementById('inventory-items');
+            inventoryItemsElement.innerHTML = '';
+            
+            if (Object.keys(gameState.inventory).length === 0) {
+                inventoryItemsElement.innerHTML = '<p>Your stash is empty. Buy some weed!</p>';
+                return;
+            }
+            
+            for (const [name, quantity] of Object.entries(gameState.inventory)) {
+                if (quantity > 0) {
+                    const weed = gameState.weedTypes[name];
+                    const itemElement = document.createElement('div');
+                    itemElement.className = 'item';
+                    itemElement.innerHTML = `
+                        <div class="item-name">${name}</div>
+                        <div class="item-effect">Qty: ${quantity}</div>
+                        <div class="item-effect">+${weed.effect.high}% high</div>
+                        <div class="item-effect">${weed.effect.stamina}% stamina</div>
+                        <button class="action-button" onclick="smokeWeed('${name}')">Smoke</button>
+                    `;
+                    inventoryItemsElement.appendChild(itemElement);
+                }
+            }
+        }
+        
+        // Buy weed
+        function buyWeed(name) {
+            const weed = gameState.weedTypes[name];
+            
+            if (gameState.money >= weed.price) {
+                gameState.money -= weed.price;
+                
+                if (!gameState.inventory[name]) {
+                    gameState.inventory[name] = 0;
+                }
+                gameState.inventory[name]++;
+                
+                addLog(`You bought 1g of ${name}.`);
+                updateStats();
+                renderInventory();
+            } else {
+                addLog(`Not enough money to buy ${name}.`);
+            }
+        }
+        
+        // Smoke weed
+        function smokeWeed(name) {
+            if (gameState.inventory[name] && gameState.inventory[name] > 0) {
+                const weed = gameState.weedTypes[name];
+                
+                gameState.inventory[name]--;
+                gameState.highness = Math.min(100, gameState.highness + weed.effect.high);
+                gameState.stamina = Math.max(0, gameState.stamina + weed.effect.stamina);
+                
+                addLog(`You smoked some ${name}. Feeling ${weed.effect.high}% higher!`);
+                
+                if (gameState.highness >= 80) {
+                    addLog("Whoa... everything is melting...");
+                } else if (gameState.highness >= 60) {
+                    addLog("Dude... this is intense...");
+                } else if (gameState.highness >= 40) {
+                    addLog("Nice buzz going on...");
+                }
+                
+                if (gameState.stamina <= 20) {
+                    addLog("You're feeling really tired... maybe rest?");
+                }
+                
+                updateStats();
+                renderInventory();
+            } else {
+                addLog(`You don't have any ${name} left.`);
+            }
+        }
+        
+        // Smoke random weed from inventory
+        function smokeRandom() {
+            const availableWeeds = Object.keys(gameState.inventory).filter(name => gameState.inventory[name] > 0);
+            
+            if (availableWeeds.length > 0) {
+                const randomWeed = availableWeeds[Math.floor(Math.random() * availableWeeds.length)];
+                smokeWeed(randomWeed);
+            } else {
+                addLog("You don't have any weed to smoke!");
+            }
+        }
+        
+        // Work to earn money
+        function work() {
+            if (gameState.highness > 30) {
+                addLog("You're too high to work properly. Maybe sober up a bit?");
+                return;
+            }
+            
+            if (gameState.stamina < 20) {
+                addLog("You're too tired to work. Get some rest.");
+                return;
+            }
+            
+            const earnings = 50;
+            gameState.money += earnings;
+            gameState.stamina = Math.max(0, gameState.stamina - 15);
+            gameState.highness = Math.max(0, gameState.highness - 5);
+            
+            addLog(`You worked and earned $${earnings}.`);
+            updateStats();
+        }
+        
+        // Rest to recover stamina
+        function rest() {
+            gameState.stamina = Math.min(100, gameState.stamina + 30);
+            gameState.highness = Math.max(0, gameState.highness - 10);
+            
+            addLog("You rested and recovered some stamina.");
+            updateStats();
+        }
+        
+        // Add a message to the log
+        function addLog(message) {
+            const logEntries = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = message;
+            logEntries.appendChild(entry);
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+        
+        // Tab switching
+        function openTab(tabName) {
+            const tabContents = document.getElementsByClassName('tab-content');
+            for (let i = 0; i < tabContents.length; i++) {
+                tabContents[i].classList.remove('active');
+            }
+            
+            const tabButtons = document.getElementsByClassName('tab-button');
+            for (let i = 0; i < tabButtons.length; i++) {
+                tabButtons[i].classList.remove('active');
+            }
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+        
+        // Start the game
+        window.onload = init;
+    </script>
+</body>
+</html>
