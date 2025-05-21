@@ -3,1379 +3,1510 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Tower Defense Game</title>
+    <title>Weed Dispensary Simulator</title>
     <style>
         :root {
-            --primary-color: #4a6fa5;
-            --secondary-color: #166088;
-            --accent-color: #4fc3f7;
-            --danger-color: #e74c3c;
-            --success-color: #2ecc71;
-            --warning-color: #f39c12;
-            --dark-color: #2c3e50;
-            --light-color: #ecf0f1;
-            --path-color: #95a5a6;
-            --tower-basic: #3498db;
-            --tower-sniper: #e74c3c;
-            --tower-splash: #2ecc71;
-            --boss-color: #c0392b;
+            --green-light: #8bc34a;
+            --green-dark: #4a7023;
+            --green-darker: #2d4216;
+            --purple: #9c27b0;
+            --orange: #ff9800;
+            --red: #f44336;
+            --blue: #2196f3;
+            --brown: #795548;
         }
-
-        * {
-            box-sizing: border-box;
-        }
-
+        
         body {
+            font-family: 'Arial', sans-serif;
+            background-color: #121212;
+            color: #fff;
             margin: 0;
             padding: 0;
-            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-            background-color: #f5f7fa;
-            color: var(--dark-color);
+            background-image: 
+                linear-gradient(rgba(20, 20, 20, 0.8), rgba(20, 20, 20, 0.8)),
+                url('https://images.unsplash.com/photo-1516733968668-dbdce39c4651?ixlib=rb-1.2.1&auto=format&fit=crop&w=1350&q=80');
+            background-size: cover;
+            background-attachment: fixed;
         }
-
-        #game-container {
+        
+        .container {
             max-width: 1000px;
             margin: 0 auto;
             padding: 20px;
         }
-
+        
         header {
-            text-align: center;
+            background-color: var(--green-dark);
+            padding: 15px;
+            border-radius: 10px;
             margin-bottom: 20px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            border: 2px solid var(--green-light);
+            text-align: center;
+            background-image: linear-gradient(to right, var(--green-dark), var(--green-darker));
         }
-
+        
         h1 {
-            color: var(--secondary-color);
             margin: 0;
+            color: white;
             font-size: 2.5rem;
-            text-shadow: 1px 1px 2px rgba(0,0,0,0.1);
+            text-shadow: 2px 2px 4px rgba(0, 0, 0, 0.5);
+            letter-spacing: 2px;
+            font-family: 'Impact', sans-serif;
         }
-
-        #game-area {
-            display: flex;
-            flex-wrap: wrap;
+        
+        .tagline {
+            font-style: italic;
+            color: #ddd;
+            margin-top: 5px;
+        }
+        
+        .game-area {
+            display: grid;
+            grid-template-columns: 1fr 2fr;
             gap: 20px;
         }
-
-        #game-canvas-container {
-            position: relative;
-            flex: 1;
-            min-width: 300px;
+        
+        @media (max-width: 768px) {
+            .game-area {
+                grid-template-columns: 1fr;
+            }
         }
-
-        #game-canvas {
-            border: 3px solid var(--secondary-color);
-            border-radius: 8px;
-            background-color: #fff;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            width: 100%;
+        
+        .player-panel {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--green-light);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
         }
-
-        #game-ui {
-            flex: 0 0 300px;
-            background-color: white;
-            border-radius: 8px;
-            padding: 20px;
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-            border: 1px solid #ddd;
-        }
-
-        #stats {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 15px;
+        
+        .stats {
             margin-bottom: 20px;
         }
-
-        .stat-card {
-            background-color: var(--light-color);
-            padding: 10px;
-            border-radius: 6px;
-            text-align: center;
-        }
-
-        .stat-card h3 {
-            margin: 0 0 5px 0;
-            font-size: 0.9rem;
-            color: var(--secondary-color);
-        }
-
-        .stat-card .value {
-            font-size: 1.4rem;
-            font-weight: bold;
-            color: var(--dark-color);
-        }
-
-        #tower-select {
-            margin-bottom: 20px;
-        }
-
-        #tower-select h2 {
-            margin-top: 0;
-            color: var(--secondary-color);
-            font-size: 1.2rem;
-            border-bottom: 2px solid var(--light-color);
-            padding-bottom: 8px;
-        }
-
-        .tower-option {
+        
+        .stat {
             display: flex;
-            align-items: center;
-            padding: 12px;
-            margin-bottom: 10px;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
-            background-color: var(--light-color);
-            border: 2px solid transparent;
-        }
-
-        .tower-option:hover {
-            transform: translateY(-2px);
-            box-shadow: 0 4px 8px rgba(0,0,0,0.1);
-        }
-
-        .tower-option.selected {
-            border-color: var(--accent-color);
-            background-color: rgba(79, 195, 247, 0.1);
-        }
-
-        .tower-icon {
-            width: 40px;
-            height: 40px;
-            border-radius: 50%;
-            margin-right: 12px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            color: white;
-            font-weight: bold;
-        }
-
-        .tower-info {
-            flex: 1;
-        }
-
-        .tower-info h3 {
-            margin: 0 0 4px 0;
-            font-size: 1rem;
-        }
-
-        .tower-stats {
-            display: flex;
-            font-size: 0.8rem;
-            color: #666;
-        }
-
-        .tower-stats span {
-            margin-right: 10px;
-            display: flex;
-            align-items: center;
-        }
-
-        .tower-stats i {
-            margin-right: 3px;
-            font-size: 0.9rem;
-        }
-
-        #upgrade-ui {
-            margin-top: 20px;
-            display: none;
-        }
-
-        #upgrade-ui h2 {
-            margin-top: 0;
-            color: var(--secondary-color);
-            font-size: 1.2rem;
-            border-bottom: 2px solid var(--light-color);
-            padding-bottom: 8px;
-        }
-
-        .upgrade-option {
-            padding: 10px;
+            justify-content: space-between;
             margin-bottom: 8px;
-            border-radius: 6px;
-            background-color: var(--light-color);
-            cursor: pointer;
-            transition: all 0.2s;
+            padding: 8px;
+            background-color: rgba(0, 0, 0, 0.3);
+            border-radius: 5px;
+            border-left: 3px solid var(--green-light);
         }
-
-        .upgrade-option:hover {
-            background-color: #d6eaf8;
-        }
-
-        .upgrade-option.unavailable {
-            opacity: 0.5;
-            cursor: not-allowed;
-        }
-
-        .upgrade-cost {
-            float: right;
+        
+        .stat-label {
             font-weight: bold;
-            color: var(--success-color);
         }
-
-        #controls {
+        
+        .stat-value {
+            font-weight: bold;
+        }
+        
+        .money {
+            color: var(--orange);
+        }
+        
+        .highness {
+            color: var(--purple);
+        }
+        
+        .stamina {
+            color: var(--blue);
+        }
+        
+        .tolerance {
+            color: var(--green-light);
+        }
+        
+        .reputation {
+            color: var(--red);
+        }
+        
+        .actions {
             margin-top: 20px;
         }
-
+        
         .btn {
-            display: inline-block;
-            padding: 10px 20px;
-            margin-right: 10px;
-            margin-bottom: 10px;
-            font-size: 1rem;
-            font-weight: 600;
-            text-align: center;
-            text-decoration: none;
-            border-radius: 6px;
-            cursor: pointer;
-            transition: all 0.2s;
+            background-color: var(--green-dark);
+            color: white;
             border: none;
-        }
-
-        .btn-primary {
-            background-color: var(--primary-color);
-            color: white;
-        }
-
-        .btn-primary:hover {
-            background-color: var(--secondary-color);
-            transform: translateY(-2px);
-        }
-
-        .btn-success {
-            background-color: var(--success-color);
-            color: white;
-        }
-
-        .btn-success:hover {
-            background-color: #27ae60;
-            transform: translateY(-2px);
-        }
-
-        .btn-warning {
-            background-color: var(--warning-color);
-            color: white;
-        }
-
-        .btn-warning:hover {
-            background-color: #e67e22;
-            transform: translateY(-2px);
-        }
-
-        .btn-danger {
-            background-color: var(--danger-color);
-            color: white;
-        }
-
-        .btn-danger:hover {
-            background-color: #c0392b;
-            transform: translateY(-2px);
-        }
-
-        .btn:disabled {
-            background-color: #bdc3c7;
-            cursor: not-allowed;
-            transform: none;
-        }
-
-        #message {
-            margin-top: 20px;
-            padding: 12px;
-            border-radius: 6px;
-            text-align: center;
-            font-weight: 600;
+            padding: 10px 15px;
+            border-radius: 5px;
+            cursor: pointer;
+            margin: 5px 0;
+            width: 100%;
+            font-weight: bold;
             transition: all 0.3s;
-            opacity: 0;
-            height: 0;
+            box-shadow: 0 2px 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        .btn:hover {
+            background-color: var(--green-light);
+            transform: translateY(-2px);
+        }
+        
+        .btn:active {
+            transform: translateY(0);
+        }
+        
+        .btn-work {
+            background-color: var(--blue);
+        }
+        
+        .btn-rest {
+            background-color: var(--purple);
+        }
+        
+        .btn-danger {
+            background-color: var(--red);
+        }
+        
+        .btn-special {
+            background-color: var(--orange);
+        }
+        
+        .store {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--green-light);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            backdrop-filter: blur(5px);
+        }
+        
+        .store-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 15px;
+            padding-bottom: 10px;
+            border-bottom: 1px solid var(--green-light);
+        }
+        
+        .tabs {
+            display: flex;
+            margin-bottom: 15px;
+            flex-wrap: wrap;
+        }
+        
+        .tab {
+            padding: 8px 15px;
+            cursor: pointer;
+            background-color: var(--green-darker);
+            margin-right: 5px;
+            border-radius: 5px 5px 0 0;
+            transition: all 0.3s;
+            margin-bottom: 5px;
+        }
+        
+        .tab.active {
+            background-color: var(--green-dark);
+            font-weight: bold;
+        }
+        
+        .tab:hover:not(.active) {
+            background-color: var(--green-dark);
+        }
+        
+        .products {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .product {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--green-light);
+            transition: all 0.3s;
+            position: relative;
             overflow: hidden;
         }
-
-        #message.show {
-            opacity: 1;
-            height: auto;
-            padding: 12px;
-            margin-top: 20px;
+        
+        .product:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
         }
-
-        #message.success {
-            background-color: rgba(46, 204, 113, 0.2);
-            color: var(--success-color);
-            border: 1px solid rgba(46, 204, 113, 0.5);
+        
+        .product-name {
+            font-size: 1.2rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--green-light);
         }
-
-        #message.info {
-            background-color: rgba(74, 111, 165, 0.2);
-            color: var(--primary-color);
-            border: 1px solid rgba(74, 111, 165, 0.5);
+        
+        .product-price {
+            color: var(--orange);
+            font-weight: bold;
+            margin-bottom: 10px;
         }
-
-        #message.warning {
-            background-color: rgba(243, 156, 18, 0.2);
-            color: var(--warning-color);
-            border: 1px solid rgba(243, 156, 18, 0.5);
-        }
-
-        #message.error {
-            background-color: rgba(231, 76, 60, 0.2);
-            color: var(--danger-color);
-            border: 1px solid rgba(231, 76, 60, 0.5);
-        }
-
-        .tooltip {
-            position: absolute;
-            background-color: rgba(0, 0, 0, 0.8);
-            color: white;
-            padding: 8px 12px;
-            border-radius: 4px;
+        
+        .product-effects {
             font-size: 0.9rem;
-            pointer-events: none;
-            z-index: 100;
-            transform: translate(-50%, -100%);
-            opacity: 0;
-            transition: opacity 0.2s;
-            max-width: 200px;
-            text-align: center;
+            margin-bottom: 10px;
         }
-
-        .tooltip:after {
-            content: '';
-            position: absolute;
-            top: 100%;
-            left: 50%;
-            margin-left: -5px;
-            border-width: 5px;
-            border-style: solid;
-            border-color: rgba(0, 0, 0, 0.8) transparent transparent transparent;
+        
+        .product-effect {
+            display: flex;
+            justify-content: space-between;
+            margin-bottom: 3px;
         }
-
-        .boss-health-bar {
+        
+        .product-btn {
+            background-color: var(--green-dark);
+            color: white;
+            border: none;
+            padding: 8px;
+            border-radius: 5px;
+            cursor: pointer;
+            width: 100%;
+            font-weight: bold;
+            transition: all 0.3s;
+        }
+        
+        .product-btn:hover {
+            background-color: var(--green-light);
+        }
+        
+        .product-stock {
             position: absolute;
             top: 10px;
-            left: 50%;
-            transform: translateX(-50%);
-            width: 200px;
-            height: 20px;
-            background-color: rgba(0, 0, 0, 0.5);
+            right: 10px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 3px 6px;
             border-radius: 10px;
-            overflow: hidden;
-            display: none;
+            font-size: 0.8rem;
         }
-
-        .boss-health-fill {
-            height: 100%;
-            background-color: var(--boss-color);
+        
+        .inventory {
+            margin-top: 20px;
+        }
+        
+        .inventory-items {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 10px;
+        }
+        
+        .inventory-item {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 10px;
+            border: 1px solid var(--green-light);
+            transition: all 0.3s;
+        }
+        
+        .inventory-item:hover {
+            transform: scale(1.05);
+        }
+        
+        .log {
+            margin-top: 20px;
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--green-light);
+            height: 150px;
+            overflow-y: auto;
+            backdrop-filter: blur(5px);
+        }
+        
+        .log-entry {
+            margin-bottom: 5px;
+            padding-bottom: 5px;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.9rem;
+        }
+        
+        .log-time {
+            color: #aaa;
+            font-size: 0.8rem;
+            margin-right: 5px;
+        }
+        
+        .high-effect {
+            position: fixed;
+            top: 0;
+            left: 0;
             width: 100%;
+            height: 100%;
+            pointer-events: none;
+            z-index: 100;
+            opacity: 0;
+            transition: opacity 0.5s;
+            background: radial-gradient(circle, rgba(156, 39, 176, 0.2) 0%, transparent 70%);
+        }
+        
+        .high-text {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            font-size: 3rem;
+            color: white;
+            text-shadow: 0 0 10px var(--purple);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 101;
+            animation: float 3s infinite;
+        }
+        
+        @keyframes float {
+            0%, 100% { transform: translate(-50%, -50%) rotate(-5deg); }
+            50% { transform: translate(-50%, -60%) rotate(5deg); }
+        }
+        
+        .notification {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            background-color: var(--green-dark);
+            color: white;
+            padding: 15px;
+            border-radius: 5px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.3);
+            transform: translateX(200%);
+            transition: transform 0.3s;
+            z-index: 1000;
+            max-width: 300px;
+        }
+        
+        .notification.show {
+            transform: translateX(0);
+        }
+        
+        .dealership {
+            background-color: rgba(0, 0, 0, 0.7);
+            padding: 15px;
+            border-radius: 10px;
+            border: 1px solid var(--green-light);
+            margin-top: 20px;
+            backdrop-filter: blur(5px);
+        }
+        
+        .upgrades {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+            gap: 15px;
+        }
+        
+        .upgrade {
+            background-color: rgba(0, 0, 0, 0.5);
+            border-radius: 8px;
+            padding: 15px;
+            border: 1px solid var(--green-light);
+        }
+        
+        .upgrade-name {
+            font-size: 1.1rem;
+            font-weight: bold;
+            margin-bottom: 5px;
+            color: var(--orange);
+        }
+        
+        .badge {
+            display: inline-block;
+            padding: 2px 5px;
+            border-radius: 10px;
+            font-size: 0.7rem;
+            font-weight: bold;
+            margin-left: 5px;
+        }
+        
+        .badge-new {
+            background-color: var(--red);
+            color: white;
+        }
+        
+        .badge-sale {
+            background-color: var(--orange);
+            color: black;
+        }
+        
+        .store-hours {
+            font-size: 0.8rem;
+            color: #aaa;
+        }
+        
+        .progress-bar {
+            height: 5px;
+            background-color: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: 5px;
+            overflow: hidden;
+        }
+        
+        .progress-fill {
+            height: 100%;
+            background-color: var(--green-light);
+            width: 0%;
             transition: width 0.3s;
         }
-
-        .boss-health-text {
-            position: absolute;
-            width: 100%;
-            text-align: center;
-            color: white;
-            font-weight: bold;
-            line-height: 20px;
+        
+        .addiction-meter {
+            margin-top: 10px;
+            font-size: 0.8rem;
         }
-
-        @media (max-width: 768px) {
-            #game-area {
-                flex-direction: column;
-            }
-            
-            #game-ui {
-                flex: 0 0 auto;
-            }
+        
+        .addiction-level {
+            color: var(--red);
+            font-weight: bold;
         }
     </style>
 </head>
 <body>
-    <div id="game-container">
+    <div class="high-effect" id="highEffect"></div>
+    <div class="high-text" id="highText">SO HIGH...</div>
+    
+    <div class="container">
         <header>
-            <h1>Tower Defense</h1>
-            <div class="boss-health-bar" id="boss-health-bar">
-                <div class="boss-health-fill" id="boss-health-fill"></div>
-                <div class="boss-health-text" id="boss-health-text"></div>
-            </div>
+            <h1>DANK DISPENSARY</h1>
+            <div class="tagline">"Your one-stop shop for the finest herbs"</div>
         </header>
         
-        <div id="game-area">
-            <div id="game-canvas-container">
-                <canvas id="game-canvas" width="800" height="500"></canvas>
-                <div class="tooltip" id="tooltip"></div>
+        <div class="game-area">
+            <div class="player-panel">
+                <div class="stats">
+                    <div class="stat">
+                        <span class="stat-label">Cash:</span>
+                        <span class="stat-value money" id="money">$100</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Highness:</span>
+                        <span class="stat-value highness" id="highness">0%</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="highness-bar"></div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Stamina:</span>
+                        <span class="stat-value stamina" id="stamina">100%</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="stamina-bar"></div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Tolerance:</span>
+                        <span class="stat-value tolerance" id="tolerance">0%</span>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="tolerance-bar"></div>
+                        </div>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Reputation:</span>
+                        <span class="stat-value reputation" id="reputation">0</span>
+                    </div>
+                    <div class="stat">
+                        <span class="stat-label">Day:</span>
+                        <span class="stat-value" id="day">1</span>
+                    </div>
+                    <div class="addiction-meter">
+                        <span>Addiction Level: </span>
+                        <span class="addiction-level" id="addiction">None</span>
+                    </div>
+                </div>
+                
+                <div class="actions">
+                    <button class="btn btn-work" onclick="work()">Work Shift ($75)</button>
+                    <button class="btn btn-rest" onclick="rest()">Take a Nap</button>
+                    <button class="btn" onclick="smokeRandom()">Smoke Random</button>
+                    <button class="btn btn-danger" onclick="soberUp()">Sober Up ($20)</button>
+                    <button class="btn btn-special" onclick="nextDay()">Next Day</button>
+                </div>
+                
+                <div class="inventory">
+                    <h3>Your Stash <small>(<span id="inventory-count">0</span>/<span id="inventory-capacity">20</span>)</small></h3>
+                    <div class="inventory-items" id="inventory">
+                        <div style="grid-column: 1 / -1; text-align: center; padding: 20px;">Your stash is empty</div>
+                    </div>
+                </div>
             </div>
             
-            <div id="game-ui">
-                <div id="stats">
-                    <div class="stat-card">
-                        <h3>Lives</h3>
-                        <div class="value" id="lives">10</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Money</h3>
-                        <div class="value" id="money">100</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Wave</h3>
-                        <div class="value" id="wave">0</div>
-                    </div>
-                    <div class="stat-card">
-                        <h3>Enemies</h3>
-                        <div class="value" id="enemies">0</div>
+            <div class="store">
+                <div class="store-header">
+                    <h2>Product Menu</h2>
+                    <div>
+                        <div id="store-status">Open</div>
+                        <div class="store-hours" id="store-hours">Closes in 8 hours</div>
                     </div>
                 </div>
                 
-                <div id="tower-select">
-                    <h2>Select Tower</h2>
-                    <div class="tower-option" data-type="basic" data-cost="20">
-                        <div class="tower-icon" style="background-color: var(--tower-basic);">B</div>
-                        <div class="tower-info">
-                            <h3>Basic Tower</h3>
-                            <div class="tower-stats">
-                                <span><i>💰</i> $20</span>
-                                <span><i>🎯</i> 150px</span>
-                                <span><i>⚔️</i> 1</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tower-option" data-type="sniper" data-cost="50">
-                        <div class="tower-icon" style="background-color: var(--tower-sniper);">S</div>
-                        <div class="tower-info">
-                            <h3>Sniper Tower</h3>
-                            <div class="tower-stats">
-                                <span><i>💰</i> $50</span>
-                                <span><i>🎯</i> 300px</span>
-                                <span><i>⚔️</i> 3</span>
-                            </div>
-                        </div>
-                    </div>
-                    <div class="tower-option" data-type="splash" data-cost="40">
-                        <div class="tower-icon" style="background-color: var(--tower-splash);">A</div>
-                        <div class="tower-info">
-                            <h3>Splash Tower</h3>
-                            <div class="tower-stats">
-                                <span><i>💰</i> $40</span>
-                                <span><i>🎯</i> 120px</span>
-                                <span><i>⚔️</i> 2 (AOE)</span>
-                            </div>
-                        </div>
+                <div class="tabs">
+                    <div class="tab active" onclick="openTab('flower')">Flower</div>
+                    <div class="tab" onclick="openTab('concentrates')">Concentrates</div>
+                    <div class="tab" onclick="openTab('edibles')">Edibles</div>
+                    <div class="tab" onclick="openTab('upgrades')">Upgrades</div>
+                </div>
+                
+                <div id="flower" class="tab-content active">
+                    <div class="products" id="flower-products">
+                        <!-- Flower products will be added here -->
                     </div>
                 </div>
                 
-                <div id="upgrade-ui">
-                    <h2>Upgrades</h2>
-                    <div id="upgrade-options"></div>
+                <div id="concentrates" class="tab-content">
+                    <div class="products" id="concentrate-products">
+                        <!-- Concentrate products will be added here -->
+                    </div>
                 </div>
                 
-                <div id="controls">
-                    <button class="btn btn-primary" id="start-wave">Start Wave</button>
-                    <button class="btn btn-success" id="upgrade-tower" disabled>Upgrade</button>
-                    <button class="btn btn-danger" id="sell-tower" disabled>Sell ($10)</button>
+                <div id="edibles" class="tab-content">
+                    <div class="products" id="edible-products">
+                        <!-- Edible products will be added here -->
+                    </div>
                 </div>
                 
-                <div id="message"></div>
+                <div id="upgrades" class="tab-content">
+                    <div class="upgrades" id="upgrade-items">
+                        <!-- Upgrades will be added here -->
+                    </div>
+                </div>
+            </div>
+        </div>
+        
+        <div class="log" id="log">
+            <h3>Dispensary Log</h3>
+            <div id="log-entries">
+                <div class="log-entry"><span class="log-time">[Day 1]</span> Welcome to Dank Dispensary!</div>
+            </div>
+        </div>
+        
+        <div class="dealership" id="dealership" style="display: none;">
+            <h2>Dealership Opportunities <span class="badge badge-new">NEW</span></h2>
+            <p>You've built up enough reputation to buy in bulk!</p>
+            <div class="products" id="bulk-products">
+                <!-- Bulk products will be added here -->
             </div>
         </div>
     </div>
-
+    
+    <div class="notification" id="notification">
+        <div id="notification-message"></div>
+    </div>
+    
+    <audio id="cashSound" src="https://www.soundjay.com/buttons/sounds/button-09.mp3" preload="auto"></audio>
+    <audio id="smokeSound" src="https://www.soundjay.com/buttons/sounds/button-10.mp3" preload="auto"></audio>
+    
     <script>
-        // Game constants
-        const TOWER_TYPES = {
-            basic: { 
-                name: "Basic Tower",
-                color: 'var(--tower-basic)', 
-                range: 150, 
-                damage: 1, 
-                cooldown: 20, 
-                cost: 20,
-                description: "Balanced tower with average range and damage.",
-                upgrades: [
-                    {
-                        name: "Improved Range",
-                        cost: 30,
-                        effects: { range: 30 },
-                        description: "+30 Range"
-                    },
-                    {
-                        name: "Damage Boost",
-                        cost: 40,
-                        effects: { damage: 1 },
-                        description: "+1 Damage"
-                    },
-                    {
-                        name: "Rapid Fire",
-                        cost: 50,
-                        effects: { cooldown: -5 },
-                        description: "Faster Attack Speed"
-                    }
-                ]
-            },
-            sniper: { 
-                name: "Sniper Tower",
-                color: 'var(--tower-sniper)', 
-                range: 300, 
-                damage: 3, 
-                cooldown: 60, 
-                cost: 50,
-                description: "Long-range tower with high single-target damage.",
-                upgrades: [
-                    {
-                        name: "Piercing Shots",
-                        cost: 60,
-                        effects: { pierce: true },
-                        description: "Shots pierce through enemies"
-                    },
-                    {
-                        name: "Critical Hits",
-                        cost: 70,
-                        effects: { critChance: 0.3, critDamage: 2 },
-                        description: "30% chance for double damage"
-                    },
-                    {
-                        name: "Overcharge",
-                        cost: 80,
-                        effects: { damage: 2, range: 50 },
-                        description: "+2 Damage, +50 Range"
-                    }
-                ]
-            },
-            splash: { 
-                name: "Splash Tower",
-                color: 'var(--tower-splash)', 
-                range: 120, 
-                damage: 2, 
-                cooldown: 40, 
-                cost: 40, 
-                aoe: true,
-                description: "Short-range tower that damages multiple enemies.",
-                upgrades: [
-                    {
-                        name: "Larger Explosion",
-                        cost: 45,
-                        effects: { aoeRadius: 70 },
-                        description: "Bigger splash radius"
-                    },
-                    {
-                        name: "Incendiary Rounds",
-                        cost: 55,
-                        effects: { burnDamage: 1, burnDuration: 100 },
-                        description: "Enemies burn after hit"
-                    },
-                    {
-                        name: "Cluster Bombs",
-                        cost: 65,
-                        effects: { cluster: true },
-                        description: "Splits into smaller explosions"
-                    }
-                ]
-            }
-        };
-
-        const ENEMY_TYPES = [
-            { name: "Basic Enemy", color: '#9b59b6', speed: 1, health: 3, value: 5, size: 15 },
-            { name: "Fast Enemy", color: '#f39c12', speed: 1.5, health: 2, value: 7, size: 12 },
-            { name: "Tank Enemy", color: '#34495e', speed: 0.8, health: 6, value: 10, size: 18 },
-            { name: "Boss Enemy", color: 'var(--boss-color)', speed: 0.5, health: 30, value: 100, size: 30, spawnEvery: 5 }
-        ];
-
-        const WAVE_ENEMY_COUNT = 5;
-        const WAVE_ENEMY_INCREASE = 3;
-        const PATH = [
-            { x: 0, y: 200 },
-            { x: 200, y: 200 },
-            { x: 200, y: 400 },
-            { x: 400, y: 400 },
-            { x: 400, y: 100 },
-            { x: 600, y: 100 },
-            { x: 600, y: 300 },
-            { x: 800, y: 300 }
-        ];
-
         // Game state
-        const state = {
-            towers: [],
-            enemies: [],
-            projectiles: [],
-            selectedTower: null,
-            selectedTowerType: 'basic',
-            lives: 10,
+        const gameState = {
             money: 100,
-            wave: 0,
-            waveInProgress: false,
-            enemiesInWave: 0,
-            enemiesSpawned: 0,
-            enemiesKilled: 0,
-            lastSpawnTime: 0,
-            spawnInterval: 1000,
-            mouseX: 0,
-            mouseY: 0,
-            hoveredTower: null,
-            hoveredEnemy: null,
-            bossActive: false
+            highness: 0,
+            stamina: 100,
+            tolerance: 0,
+            day: 1,
+            reputation: 0,
+            inventory: {},
+            ownedUpgrades: [],
+            storeOpen: true,
+            lastSmoked: null,
+            storeHoursLeft: 8,
+            addictionLevel: 0,
+            inventoryCapacity: 20,
+            dailyEarnings: 0,
+            
+            products: {
+                flower: [
+                    {
+                        id: 'reggie',
+                        name: 'Reggie',
+                        price: 15,
+                        effect: { high: 10, stamina: -5, tolerance: 2, addiction: 1 },
+                        description: 'Basic brick weed',
+                        stock: 10,
+                        popularity: 1
+                    },
+                    {
+                        id: 'mids',
+                        name: 'Mids',
+                        price: 30,
+                        effect: { high: 20, stamina: -8, tolerance: 3, addiction: 2 },
+                        description: 'Decent quality',
+                        stock: 8,
+                        popularity: 2
+                    },
+                    {
+                        id: 'dank',
+                        name: 'Dank OG',
+                        price: 60,
+                        effect: { high: 35, stamina: -12, tolerance: 5, addiction: 3 },
+                        description: 'Top shelf flower',
+                        stock: 6,
+                        popularity: 3
+                    },
+                    {
+                        id: 'exotic',
+                        name: 'Exotic',
+                        price: 100,
+                        effect: { high: 50, stamina: -15, tolerance: 7, addiction: 4 },
+                        description: 'Rare designer strain',
+                        stock: 4,
+                        popularity: 4
+                    },
+                    {
+                        id: 'moonrocks',
+                        name: 'Moon Rocks',
+                        price: 200,
+                        effect: { high: 70, stamina: -20, tolerance: 10, addiction: 5 },
+                        description: 'The ultimate experience',
+                        stock: 2,
+                        popularity: 5
+                    }
+                ],
+                
+                concentrates: [
+                    {
+                        id: 'kief',
+                        name: 'Kief',
+                        price: 40,
+                        effect: { high: 30, stamina: -10, tolerance: 6, addiction: 3 },
+                        description: 'Pure trichomes',
+                        stock: 8,
+                        popularity: 2
+                    },
+                    {
+                        id: 'hash',
+                        name: 'Hash',
+                        price: 80,
+                        effect: { high: 45, stamina: -15, tolerance: 8, addiction: 4 },
+                        description: 'Traditional concentrate',
+                        stock: 6,
+                        popularity: 3
+                    },
+                    {
+                        id: 'wax',
+                        name: 'Live Resin',
+                        price: 120,
+                        effect: { high: 60, stamina: -18, tolerance: 10, addiction: 5 },
+                        description: 'Premium extract',
+                        stock: 4,
+                        popularity: 4
+                    },
+                    {
+                        id: 'shatter',
+                        name: 'Diamonds',
+                        price: 200,
+                        effect: { high: 80, stamina: -25, tolerance: 15, addiction: 6 },
+                        description: '99% pure THC',
+                        stock: 2,
+                        popularity: 5
+                    }
+                ],
+                
+                edibles: [
+                    {
+                        id: 'gummy',
+                        name: 'Gummy Bears',
+                        price: 25,
+                        effect: { high: 40, stamina: -5, tolerance: 5, addiction: 2 },
+                        description: 'Slow but long-lasting',
+                        stock: 10,
+                        delayed: true,
+                        popularity: 2
+                    },
+                    {
+                        id: 'brownie',
+                        name: 'Space Brownie',
+                        price: 50,
+                        effect: { high: 60, stamina: -8, tolerance: 8, addiction: 3 },
+                        description: 'Powerful edible',
+                        stock: 6,
+                        delayed: true,
+                        popularity: 3
+                    },
+                    {
+                        id: 'drink',
+                        name: 'THC Soda',
+                        price: 40,
+                        effect: { high: 50, stamina: -6, tolerance: 6, addiction: 3 },
+                        description: 'Fast-acting drink',
+                        stock: 8,
+                        delayed: false,
+                        popularity: 3
+                    }
+                ]
+            },
+            
+            upgrades: [
+                {
+                    id: 'stashbox',
+                    name: 'Stash Box',
+                    price: 200,
+                    description: 'Increases inventory capacity by 10',
+                    effect: 'capacity'
+                },
+                {
+                    id: 'grinder',
+                    name: 'Premium Grinder',
+                    price: 150,
+                    description: 'Get 10% more from your flower',
+                    effect: 'efficiency'
+                },
+                {
+                    id: 'vape',
+                    name: 'Dry Herb Vape',
+                    price: 300,
+                    description: 'Reduces stamina loss by 25%',
+                    effect: 'health'
+                },
+                {
+                    id: 'dealer',
+                    name: 'Connect',
+                    price: 500,
+                    description: 'Access to bulk purchases',
+                    effect: 'bulk'
+                },
+                {
+                    id: 'business',
+                    name: 'Business License',
+                    price: 1000,
+                    description: 'Earn 20% more from work',
+                    effect: 'earnings'
+                }
+            ],
+            
+            bulkDeals: [
+                {
+                    id: 'oz_reggie',
+                    name: 'Oz of Reggie',
+                    price: 250,
+                    quantity: 28,
+                    product: 'reggie',
+                    description: '28g of basic flower',
+                    reputationReq: 5
+                },
+                {
+                    id: 'oz_mids',
+                    name: 'Oz of Mids',
+                    price: 500,
+                    quantity: 28,
+                    product: 'mids',
+                    description: '28g of decent flower',
+                    reputationReq: 10
+                },
+                {
+                    id: 'half_dank',
+                    name: 'Half Oz of Dank',
+                    price: 750,
+                    quantity: 14,
+                    product: 'dank',
+                    description: '14g of premium flower',
+                    reputationReq: 15
+                },
+                {
+                    id: 'quarter_exotic',
+                    name: 'Quarter Oz of Exotic',
+                    price: 1000,
+                    quantity: 7,
+                    product: 'exotic',
+                    description: '7g of rare designer strain',
+                    reputationReq: 20
+                }
+            ]
         };
 
-        // DOM elements
-        const canvas = document.getElementById('game-canvas');
-        const ctx = canvas.getContext('2d');
-        const livesDisplay = document.getElementById('lives');
-        const moneyDisplay = document.getElementById('money');
-        const waveDisplay = document.getElementById('wave');
-        const enemiesDisplay = document.getElementById('enemies');
-        const messageDisplay = document.getElementById('message');
-        const startWaveBtn = document.getElementById('start-wave');
-        const upgradeTowerBtn = document.getElementById('upgrade-tower');
-        const sellTowerBtn = document.getElementById('sell-tower');
-        const towerOptions = document.querySelectorAll('.tower-option');
-        const tooltip = document.getElementById('tooltip');
-        const upgradeUI = document.getElementById('upgrade-ui');
-        const upgradeOptions = document.getElementById('upgrade-options');
-        const bossHealthBar = document.getElementById('boss-health-bar');
-        const bossHealthFill = document.getElementById('boss-health-fill');
-        const bossHealthText = document.getElementById('boss-health-text');
-
-        // Initialize game
+        // Initialize the game
         function init() {
-            // Set canvas size
-            resizeCanvas();
-            window.addEventListener('resize', resizeCanvas);
+            updateStats();
+            renderProducts();
+            renderUpgrades();
+            renderInventory();
             
-            // Event listeners
-            canvas.addEventListener('click', handleCanvasClick);
-            canvas.addEventListener('mousemove', handleMouseMove);
-            canvas.addEventListener('mouseout', handleMouseOut);
-            startWaveBtn.addEventListener('click', startWave);
-            upgradeTowerBtn.addEventListener('click', showUpgradeOptions);
-            sellTowerBtn.addEventListener('click', sellTower);
+            // Check for highness effect every second
+            setInterval(updateHighEffect, 100);
             
-            towerOptions.forEach(option => {
-                option.addEventListener('click', () => {
-                    towerOptions.forEach(opt => opt.classList.remove('selected'));
-                    option.classList.add('selected');
-                    state.selectedTowerType = option.dataset.type;
-                });
-            });
-
-            // Select basic tower by default
-            document.querySelector('.tower-option[data-type="basic"]').classList.add('selected');
-
-            // Start game loop
-            requestAnimationFrame(gameLoop);
+            // Update store hours every minute
+            setInterval(updateStoreHours, 60000);
+            
+            // Restock store every 3 days
+            if (gameState.day % 3 === 0) {
+                restockStore();
+            }
         }
 
-        function resizeCanvas() {
-            const container = document.getElementById('game-canvas-container');
-            const ratio = 800 / 500; // Original canvas aspect ratio
+        // Update all displayed stats
+        function updateStats() {
+            document.getElementById('money').textContent = `$${gameState.money}`;
+            document.getElementById('highness').textContent = `${gameState.highness}%`;
+            document.getElementById('stamina').textContent = `${gameState.stamina}%`;
+            document.getElementById('tolerance').textContent = `${gameState.tolerance}%`;
+            document.getElementById('day').textContent = gameState.day;
+            document.getElementById('reputation').textContent = gameState.reputation;
             
-            if (container.clientWidth / ratio < container.clientHeight) {
-                canvas.style.width = container.clientWidth + 'px';
-                canvas.style.height = (container.clientWidth / ratio) + 'px';
+            // Update progress bars
+            document.getElementById('highness-bar').style.width = `${gameState.highness}%`;
+            document.getElementById('stamina-bar').style.width = `${gameState.stamina}%`;
+            document.getElementById('tolerance-bar').style.width = `${gameState.tolerance}%`;
+            
+            // Update store status
+            const statusElement = document.getElementById('store-status');
+            statusElement.textContent = gameState.storeOpen ? 'Open' : 'Closed';
+            statusElement.style.color = gameState.storeOpen ? 'var(--green-light)' : 'var(--red)';
+            
+            // Update store hours
+            document.getElementById('store-hours').textContent = gameState.storeOpen 
+                ? `Closes in ${gameState.storeHoursLeft} hours` 
+                : `Opens in ${8 - gameState.storeHoursLeft} hours`;
+            
+            // Show/hide dealership based on upgrades
+            const hasDealer = gameState.ownedUpgrades.includes('dealer');
+            document.getElementById('dealership').style.display = hasDealer ? 'block' : 'none';
+            
+            if (hasDealer) {
+                renderBulkDeals();
+            }
+            
+            // Update inventory count
+            const totalItems = Object.values(gameState.inventory).reduce((sum, qty) => sum + qty, 0);
+            document.getElementById('inventory-count').textContent = totalItems;
+            document.getElementById('inventory-capacity').textContent = gameState.inventoryCapacity;
+            
+            // Update addiction level
+            let addictionText = '';
+            if (gameState.addictionLevel < 10) {
+                addictionText = 'None';
+            } else if (gameState.addictionLevel < 30) {
+                addictionText = 'Low';
+            } else if (gameState.addictionLevel < 60) {
+                addictionText = 'Moderate';
+            } else if (gameState.addictionLevel < 90) {
+                addictionText = 'High';
             } else {
-                canvas.style.height = container.clientHeight + 'px';
-                canvas.style.width = (container.clientHeight * ratio) + 'px';
+                addictionText = 'Severe';
             }
+            document.getElementById('addiction').textContent = addictionText;
         }
 
-        // Game loop
-        function gameLoop(timestamp) {
-            update(timestamp);
-            render();
-            requestAnimationFrame(gameLoop);
+        // Render all products
+        function renderProducts() {
+            renderProductCategory('flower');
+            renderProductCategory('concentrates');
+            renderProductCategory('edibles');
         }
 
-        // Update game state
-        function update(timestamp) {
-            // Spawn enemies if wave is in progress
-            if (state.waveInProgress && state.enemiesSpawned < state.enemiesInWave) {
-                if (timestamp - state.lastSpawnTime > state.spawnInterval) {
-                    spawnEnemy();
-                    state.lastSpawnTime = timestamp;
-                }
-            }
-
-            // Update enemies
-            state.enemies.forEach(enemy => {
-                // Apply burn damage if burning
-                if (enemy.burnDuration > 0) {
-                    enemy.burnDuration--;
-                    if (enemy.burnDuration % 20 === 0) {
-                        enemy.health -= enemy.burnDamage;
-                        if (enemy.health <= 0) {
-                            state.money += enemy.value;
-                            removeEnemy(enemy);
-                            state.enemiesKilled++;
-                            checkWaveComplete();
-                            return;
-                        }
-                    }
-                }
-                
-                // Move enemy along path
-                const nextPoint = PATH[enemy.pathIndex];
-                const dx = nextPoint.x - enemy.x;
-                const dy = nextPoint.y - enemy.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 1) {
-                    enemy.pathIndex++;
-                    if (enemy.pathIndex >= PATH.length) {
-                        // Enemy reached the end
-                        state.lives--;
-                        livesDisplay.textContent = state.lives;
-                        removeEnemy(enemy);
-                        showMessage(`Enemy reached base! Lives: ${state.lives}`, 'error');
-                        checkGameOver();
-                        return;
-                    }
-                } else {
-                    enemy.x += (dx / distance) * enemy.speed;
-                    enemy.y += (dy / distance) * enemy.speed;
-                }
-            });
-
-            // Update towers
-            state.towers.forEach(tower => {
-                tower.cooldown--;
-                if (tower.cooldown <= 0) {
-                    const target = findTarget(tower);
-                    if (target) {
-                        tower.cooldown = TOWER_TYPES[tower.type].cooldown;
-                        shoot(tower, target);
-                    }
-                }
-            });
-
-            // Update projectiles
-            state.projectiles.forEach((projectile, index) => {
-                const dx = projectile.target.x - projectile.x;
-                const dy = projectile.target.y - projectile.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance < 5) {
-                    // Hit target
-                    let damage = projectile.damage;
-                    
-                    // Critical hit chance
-                    if (projectile.critChance && Math.random() < projectile.critChance) {
-                        damage *= projectile.critDamage;
-                    }
-                    
-                    projectile.target.health -= damage;
-                    
-                    // Piercing shot
-                    let piercedEnemies = [];
-                    if (projectile.pierce) {
-                        piercedEnemies = state.enemies.filter(e => {
-                            if (e === projectile.target) return false;
-                            const edx = e.x - projectile.target.x;
-                            const edy = e.y - projectile.target.y;
-                            return Math.sqrt(edx * edx + edy * edy) < 30;
-                        });
-                        
-                        piercedEnemies.forEach(e => {
-                            e.health -= damage * 0.5;
-                        });
-                    }
-                    
-                    // AOE damage
-                    if (projectile.aoe) {
-                        const aoeRadius = projectile.aoeRadius || 50;
-                        state.enemies.forEach(enemy => {
-                            if (enemy !== projectile.target && !piercedEnemies.includes(enemy)) {
-                                const enemyDx = enemy.x - projectile.target.x;
-                                const enemyDy = enemy.y - projectile.target.y;
-                                const enemyDistance = Math.sqrt(enemyDx * enemyDx + enemyDy * enemyDy);
-                                if (enemyDistance < aoeRadius) {
-                                    enemy.health -= damage * 0.5;
-                                    
-                                    // Cluster bombs
-                                    if (projectile.cluster && enemyDistance < aoeRadius/2) {
-                                        enemy.health -= damage * 0.3;
-                                    }
-                                }
-                            }
-                        });
-                    }
-                    
-                    // Burn effect
-                    if (projectile.burnDamage) {
-                        projectile.target.burnDamage = projectile.burnDamage;
-                        projectile.target.burnDuration = projectile.burnDuration;
-                    }
-                    
-                    // Check for enemy deaths
-                    const allHitEnemies = [projectile.target, ...piercedEnemies];
-                    allHitEnemies.forEach(enemy => {
-                        if (enemy.health <= 0) {
-                            state.money += enemy.value;
-                            moneyDisplay.textContent = state.money;
-                            removeEnemy(enemy);
-                            state.enemiesKilled++;
-                            enemiesDisplay.textContent = state.enemiesInWave - state.enemiesKilled;
-                            checkWaveComplete();
-                        }
-                    });
-                    
-                    state.projectiles.splice(index, 1);
-                } else {
-                    projectile.x += (dx / distance) * projectile.speed;
-                    projectile.y += (dy / distance) * projectile.speed;
-                }
-            });
-
-            // Update boss health bar
-            updateBossHealthBar();
-
-            // Update hover information
-            updateHoverInfo();
-        }
-
-        // Render game
-        function render() {
-            // Clear canvas
-            ctx.clearRect(0, 0, canvas.width, canvas.height);
+        // Render products for a specific category
+        function renderProductCategory(category) {
+            const container = document.getElementById(`${category}-products`);
+            container.innerHTML = '';
             
-            // Draw path
-            ctx.beginPath();
-            ctx.moveTo(PATH[0].x, PATH[0].y);
-            for (let i = 1; i < PATH.length; i++) {
-                ctx.lineTo(PATH[i].x, PATH[i].y);
-            }
-            ctx.strokeStyle = 'var(--path-color)';
-            ctx.lineWidth = 40;
-            ctx.stroke();
-            
-            // Draw path outline
-            ctx.beginPath();
-            ctx.moveTo(PATH[0].x, PATH[0].y);
-            for (let i = 1; i < PATH.length; i++) {
-                ctx.lineTo(PATH[i].x, PATH[i].y);
-            }
-            ctx.strokeStyle = 'var(--dark-color)';
-            ctx.lineWidth = 2;
-            ctx.stroke();
-            
-            // Draw towers
-            state.towers.forEach(tower => {
-                // Tower base
-                ctx.fillStyle = tower === state.selectedTower ? 'var(--accent-color)' : TOWER_TYPES[tower.type].color;
-                ctx.beginPath();
-                ctx.arc(tower.x, tower.y, 20, 0, Math.PI * 2);
-                ctx.fill();
+            gameState.products[category].forEach(product => {
+                const productElement = document.createElement('div');
+                productElement.className = 'product';
                 
-                // Tower range (only when selected or hovered)
-                if (tower === state.selectedTower || tower === state.hoveredTower) {
-                    ctx.strokeStyle = 'rgba(79, 195, 247, 0.3)';
-                    ctx.beginPath();
-                    ctx.arc(tower.x, tower.y, TOWER_TYPES[tower.type].range, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
+                // Check if product is popular (for visual flair)
+                const isPopular = product.popularity >= 4;
+                const isOnSale = Math.random() > 0.8 && gameState.day > 3;
                 
-                // Tower level indicator
-                if (tower.level > 1) {
-                    ctx.fillStyle = '#fff';
-                    ctx.font = 'bold 12px Arial';
-                    ctx.textAlign = 'center';
-                    ctx.textBaseline = 'middle';
-                    ctx.fillText(tower.level.toString(), tower.x, tower.y);
-                }
-            });
-            
-            // Draw enemies
-            state.enemies.forEach(enemy => {
-                // Enemy body
-                ctx.fillStyle = enemy.color;
-                ctx.beginPath();
-                ctx.arc(enemy.x, enemy.y, enemy.size || 15, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Enemy health bar background
-                ctx.fillStyle = 'rgba(0, 0, 0, 0.5)';
-                ctx.fillRect(enemy.x - (enemy.size || 15), enemy.y - (enemy.size || 15) - 10, 
-                             (enemy.size || 15) * 2, 5);
-                
-                // Enemy health bar
-                const healthPercent = enemy.health / enemy.maxHealth;
-                ctx.fillStyle = healthPercent > 0.6 ? 'var(--success-color)' : 
-                               healthPercent > 0.3 ? 'var(--warning-color)' : 'var(--danger-color)';
-                ctx.fillRect(enemy.x - (enemy.size || 15), enemy.y - (enemy.size || 15) - 10, 
-                             (enemy.size || 15) * 2 * healthPercent, 5);
-                
-                // Burn effect
-                if (enemy.burnDuration > 0) {
-                    ctx.fillStyle = 'rgba(255, 100, 0, 0.5)';
-                    ctx.beginPath();
-                    ctx.arc(enemy.x, enemy.y, (enemy.size || 15) * 0.7, 0, Math.PI * 2);
-                    ctx.fill();
-                }
-            });
-            
-            // Draw projectiles
-            state.projectiles.forEach(projectile => {
-                ctx.fillStyle = projectile.color;
-                ctx.beginPath();
-                ctx.arc(projectile.x, projectile.y, 5, 0, Math.PI * 2);
-                ctx.fill();
-                
-                // Draw projectile trail
-                ctx.strokeStyle = projectile.color;
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.moveTo(projectile.source.x, projectile.source.y);
-                ctx.lineTo(projectile.x, projectile.y);
-                ctx.stroke();
-            });
-            
-            // Draw hover effect for selected tower placement
-            if (!state.selectedTower && state.selectedTowerType && !state.waveInProgress) {
-                const towerType = TOWER_TYPES[state.selectedTowerType];
-                const canPlace = !isOnPath(state.mouseX, state.mouseY) && state.money >= towerType.cost;
-                
-                ctx.strokeStyle = canPlace ? 'var(--success-color)' : 'var(--danger-color)';
-                ctx.lineWidth = 2;
-                ctx.beginPath();
-                ctx.arc(state.mouseX, state.mouseY, 20, 0, Math.PI * 2);
-                ctx.stroke();
-                
-                if (canPlace) {
-                    ctx.strokeStyle = 'rgba(46, 204, 113, 0.3)';
-                    ctx.beginPath();
-                    ctx.arc(state.mouseX, state.mouseY, towerType.range, 0, Math.PI * 2);
-                    ctx.stroke();
-                }
-            }
-        }
-
-        // Event handlers
-        function handleCanvasClick(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            const x = (e.clientX - rect.left) * scaleX;
-            const y = (e.clientY - rect.top) * scaleY;
-            
-            // Check if clicking on an existing tower
-            for (const tower of state.towers) {
-                const dx = x - tower.x;
-                const dy = y - tower.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance <= 20) {
-                    // Select this tower
-                    state.selectedTower = tower;
-                    upgradeTowerBtn.disabled = false;
-                    sellTowerBtn.disabled = false;
-                    showUpgradeOptions();
-                    showMessage(`${TOWER_TYPES[tower.type].name} selected (Level ${tower.level})`, 'info');
-                    return;
-                }
-            }
-            
-            // Deselect if clicking elsewhere
-            state.selectedTower = null;
-            upgradeTowerBtn.disabled = true;
-            sellTowerBtn.disabled = true;
-            upgradeUI.style.display = 'none';
-            
-            // Check if valid placement (not on path)
-            const towerType = TOWER_TYPES[state.selectedTowerType];
-            if (!isOnPath(x, y) && state.money >= towerType.cost) {
-                placeTower(x, y, state.selectedTowerType);
-            } else if (isOnPath(x, y)) {
-                showMessage("Can't place tower on path!", 'error');
-            } else {
-                showMessage(`Not enough money! Need $${towerType.cost}`, 'error');
-            }
-        }
-
-        function handleMouseMove(e) {
-            const rect = canvas.getBoundingClientRect();
-            const scaleX = canvas.width / rect.width;
-            const scaleY = canvas.height / rect.height;
-            state.mouseX = (e.clientX - rect.left) * scaleX;
-            state.mouseY = (e.clientY - rect.top) * scaleY;
-        }
-
-        function handleMouseOut() {
-            state.hoveredTower = null;
-            state.hoveredEnemy = null;
-            tooltip.style.opacity = '0';
-        }
-
-        function updateHoverInfo() {
-            // Reset hover states
-            state.hoveredTower = null;
-            state.hoveredEnemy = null;
-            
-            // Check for tower hover
-            for (const tower of state.towers) {
-                const dx = state.mouseX - tower.x;
-                const dy = state.mouseY - tower.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance <= 20) {
-                    state.hoveredTower = tower;
-                    break;
-                }
-            }
-            
-            // Check for enemy hover
-            for (const enemy of state.enemies) {
-                const dx = state.mouseX - enemy.x;
-                const dy = state.mouseY - enemy.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance <= (enemy.size || 15)) {
-                    state.hoveredEnemy = enemy;
-                    break;
-                }
-            }
-            
-            // Update tooltip
-            if (state.hoveredTower) {
-                const tower = state.hoveredTower;
-                const type = TOWER_TYPES[tower.type];
-                tooltip.innerHTML = `
-                    <strong>${type.name} (Level ${tower.level})</strong><br>
-                    Damage: ${type.damage}<br>
-                    Range: ${type.range}px<br>
-                    ${type.aoe ? 'Splash damage' : 'Single target'}
+                productElement.innerHTML = `
+                    <div class="product-name">${product.name}${isPopular ? ' ★' : ''}</div>
+                    ${isOnSale ? '<div class="badge badge-sale">SALE</div>' : ''}
+                    <div class="product-price">$${isOnSale ? Math.floor(product.price * 0.8) : product.price}</div>
+                    <div class="product-effects">
+                        <div class="product-effect">
+                            <span>High:</span>
+                            <span>+${product.effect.high}%</span>
+                        </div>
+                        <div class="product-effect">
+                            <span>Stamina:</span>
+                            <span>${product.effect.stamina}%</span>
+                        </div>
+                        <div class="product-effect">
+                            <span>Tolerance:</span>
+                            <span>+${product.effect.tolerance}%</span>
+                        </div>
+                    </div>
+                    <div class="product-description">${product.description}</div>
+                    <div class="product-stock">${product.stock}g left</div>
+                    <button class="product-btn" onclick="buyProduct('${category}', '${product.id}', ${isOnSale})">
+                        Buy 1g ${isOnSale ? '(-20%)' : ''}
+                    </button>
                 `;
-                tooltip.style.left = `${tower.x}px`;
-                tooltip.style.top = `${tower.y - 30}px`;
-                tooltip.style.opacity = '1';
-            } else if (state.hoveredEnemy) {
-                const enemy = state.hoveredEnemy;
-                tooltip.innerHTML = `
-                    <strong>${enemy.name}</strong><br>
-                    Health: ${enemy.health}/${enemy.maxHealth}<br>
-                    Speed: ${enemy.speed.toFixed(1)}<br>
-                    Value: $${enemy.value}
+                
+                container.appendChild(productElement);
+            });
+        }
+
+        // Render bulk deals
+        function renderBulkDeals() {
+            const container = document.getElementById('bulk-products');
+            container.innerHTML = '';
+            
+            gameState.bulkDeals.forEach(deal => {
+                // Check if player meets reputation requirement
+                const canBuy = gameState.reputation >= deal.reputationReq;
+                
+                const dealElement = document.createElement('div');
+                dealElement.className = 'product';
+                dealElement.style.opacity = canBuy ? '1' : '0.6';
+                
+                dealElement.innerHTML = `
+                    <div class="product-name">${deal.name}</div>
+                    <div class="product-price">$${deal.price}</div>
+                    <div class="product-effects">
+                        <div class="product-effect">
+                            <span>Quantity:</span>
+                            <span>${deal.quantity}g</span>
+                        </div>
+                        <div class="product-effect">
+                            <span>Reputation:</span>
+                            <span>${deal.reputationReq}+</span>
+                        </div>
+                    </div>
+                    <div class="product-description">${deal.description}</div>
+                    <button class="product-btn" onclick="${canBuy ? `buyBulkDeal('${deal.id}')` : ''}" 
+                        ${!canBuy ? 'disabled style="background-color: #555;"' : ''}>
+                        ${canBuy ? 'Purchase' : 'Need Rep ' + deal.reputationReq}
+                    </button>
                 `;
-                tooltip.style.left = `${enemy.x}px`;
-                tooltip.style.top = `${enemy.y - 30}px`;
-                tooltip.style.opacity = '1';
-            } else {
-                tooltip.style.opacity = '0';
-            }
+                
+                container.appendChild(dealElement);
+            });
         }
 
-        function startWave() {
-            if (state.waveInProgress) return;
+        // Render upgrades
+        function renderUpgrades() {
+            const container = document.getElementById('upgrade-items');
+            container.innerHTML = '';
             
-            state.wave++;
-            waveDisplay.textContent = state.wave;
-            
-            // Calculate enemies for this wave
-            let baseCount = WAVE_ENEMY_COUNT + (state.wave - 1) * WAVE_ENEMY_INCREASE;
-            
-            // Add boss enemy every 5 waves
-            if (state.wave % 5 === 0) {
-                state.enemiesInWave = 1; // Just the boss
-                state.bossActive = true;
-                showMessage("Boss Wave Incoming!", 'warning');
-            } else {
-                state.enemiesInWave = baseCount;
-                state.bossActive = false;
-            }
-            
-            state.enemiesSpawned = 0;
-            state.enemiesKilled = 0;
-            state.waveInProgress = true;
-            startWaveBtn.disabled = true;
-            enemiesDisplay.textContent = state.enemiesInWave;
-            showMessage(`Wave ${state.wave} started! Defend your base!`, 'info');
+            gameState.upgrades.forEach(upgrade => {
+                const owned = gameState.ownedUpgrades.includes(upgrade.id);
+                const upgradeElement = document.createElement('div');
+                upgradeElement.className = 'upgrade';
+                
+                upgradeElement.innerHTML = `
+                    <div class="upgrade-name">${upgrade.name}</div>
+                    <div class="product-price">$${upgrade.price}</div>
+                    <div class="product-description">${upgrade.description}</div>
+                    <button class="product-btn" 
+                            onclick="${owned ? '' : `buyUpgrade('${upgrade.id}')`}" 
+                            ${owned ? 'disabled style="background-color: #555;"' : ''}>
+                        ${owned ? 'Owned' : 'Purchase'}
+                    </button>
+                `;
+                
+                container.appendChild(upgradeElement);
+            });
         }
 
-        function showUpgradeOptions() {
-            if (!state.selectedTower) return;
+        // Render inventory
+        function renderInventory() {
+            const container = document.getElementById('inventory');
+            container.innerHTML = '';
             
-            const towerType = TOWER_TYPES[state.selectedTower.type];
-            upgradeOptions.innerHTML = '';
+            const totalItems = Object.values(gameState.inventory).reduce((sum, qty) => sum + qty, 0);
             
-            if (!towerType.upgrades || towerType.upgrades.length === 0) {
-                upgradeOptions.innerHTML = '<p>No upgrades available for this tower</p>';
-                upgradeUI.style.display = 'block';
+            if (totalItems === 0) {
+                container.innerHTML = '<div style="grid-column: 1 / -1; text-align: center; padding: 20px;">Your stash is empty</div>';
                 return;
             }
             
-            // Show available upgrades
-            towerType.upgrades.forEach((upgrade, index) => {
-                if (state.selectedTower.upgradeIndex > index) return; // Skip already applied upgrades
-                
-                const option = document.createElement('div');
-                option.className = `upgrade-option ${state.money < upgrade.cost ? 'unavailable' : ''}`;
-                option.innerHTML = `
-                    <strong>${upgrade.name}</strong>
-                    <span class="upgrade-cost">$${upgrade.cost}</span>
-                    <div>${upgrade.description}</div>
-                `;
-                
-                option.addEventListener('click', () => {
-                    if (state.money >= upgrade.cost) {
-                        applyUpgrade(upgrade);
+            for (const [productId, quantity] of Object.entries(gameState.inventory)) {
+                if (quantity > 0) {
+                    // Find the product details
+                    let product = null;
+                    let category = null;
+                    
+                    // Check all categories
+                    for (const cat of ['flower', 'concentrates', 'edibles']) {
+                        const found = gameState.products[cat].find(p => p.id === productId);
+                        if (found) {
+                            product = found;
+                            category = cat;
+                            break;
+                        }
                     }
-                });
-                
-                upgradeOptions.appendChild(option);
-            });
-            
-            upgradeUI.style.display = 'block';
+                    
+                    // Also check bulk deals
+                    if (!product) {
+                        const found = gameState.bulkDeals.find(d => d.product === productId);
+                        if (found) {
+                            product = {
+                                name: found.name.replace(/Oz of |Half |Quarter /, ''),
+                                effect: gameState.products.flower.find(p => p.id === found.product)?.effect
+                            };
+                            category = 'bulk';
+                        }
+                    }
+                    
+                    if (product) {
+                        const itemElement = document.createElement('div');
+                        itemElement.className = 'inventory-item';
+                        
+                        itemElement.innerHTML = `
+                            <div style="font-weight: bold; color: var(--green-light);">${product.name}</div>
+                            <div>${quantity}g</div>
+                            <button class="product-btn" style="padding: 5px; font-size: 0.8rem;" onclick="smokeWeed('${productId}', '${category}')">
+                                Use
+                            </button>
+                        `;
+                        
+                        container.appendChild(itemElement);
+                    }
+                }
+            }
         }
 
-        function applyUpgrade(upgrade) {
-            if (!state.selectedTower || state.money < upgrade.cost) return;
+        // Buy a product
+        function buyProduct(category, productId, isOnSale = false) {
+            if (!gameState.storeOpen) {
+                showNotification("The store is closed! Come back tomorrow.");
+                return;
+            }
             
-            const towerType = TOWER_TYPES[state.selectedTower.type];
+            const product = gameState.products[category].find(p => p.id === productId);
+            
+            if (!product) {
+                showNotification("Product not available");
+                return;
+            }
+            
+            if (product.stock <= 0) {
+                showNotification("Out of stock!");
+                return;
+            }
+            
+            const price = isOnSale ? Math.floor(product.price * 0.8) : product.price;
+            
+            // Check inventory capacity
+            const totalItems = Object.values(gameState.inventory).reduce((sum, qty) => sum + qty, 0);
+            if (totalItems >= gameState.inventoryCapacity) {
+                showNotification("Your stash is full! Upgrade your capacity.");
+                return;
+            }
+            
+            if (gameState.money >= price) {
+                gameState.money -= price;
+                product.stock -= 1;
+                
+                if (!gameState.inventory[productId]) {
+                    gameState.inventory[productId] = 0;
+                }
+                gameState.inventory[productId] += 1;
+                
+                playSound('cashSound');
+                addLog(`Purchased 1g of ${product.name} for $${price}`);
+                updateStats();
+                renderInventory();
+                renderProducts();
+                showNotification(`Added ${product.name} to your stash`);
+            } else {
+                showNotification("Not enough money!");
+            }
+        }
+
+        // Buy a bulk deal
+        function buyBulkDeal(dealId) {
+            const deal = gameState.bulkDeals.find(d => d.id === dealId);
+            
+            if (!deal) {
+                showNotification("Deal not available");
+                return;
+            }
+            
+            // Check inventory capacity
+            const totalItems = Object.values(gameState.inventory).reduce((sum, qty) => sum + qty, 0);
+            if (totalItems + deal.quantity > gameState.inventoryCapacity) {
+                showNotification("Not enough space in your stash!");
+                return;
+            }
+            
+            if (gameState.money >= deal.price) {
+                gameState.money -= deal.price;
+                
+                if (!gameState.inventory[deal.product]) {
+                    gameState.inventory[deal.product] = 0;
+                }
+                gameState.inventory[deal.product] += deal.quantity;
+                
+                playSound('cashSound');
+                addLog(`Purchased ${deal.name} for $${deal.price}`);
+                updateStats();
+                renderInventory();
+                showNotification(`Added ${deal.quantity}g to your stash`);
+            } else {
+                showNotification("Not enough money for this deal!");
+            }
+        }
+
+        // Buy an upgrade
+        function buyUpgrade(upgradeId) {
+            const upgrade = gameState.upgrades.find(u => u.id === upgradeId);
+            
+            if (!upgrade) {
+                showNotification("Upgrade not available");
+                return;
+            }
+            
+            if (gameState.money >= upgrade.price) {
+                gameState.money -= upgrade.price;
+                gameState.ownedUpgrades.push(upgradeId);
+                
+                // Apply upgrade effects
+                switch(upgrade.effect) {
+                    case 'capacity':
+                        gameState.inventoryCapacity += 10;
+                        break;
+                    case 'efficiency':
+                        // Handled in smokeWeed function
+                        break;
+                    case 'health':
+                        // Handled in smokeWeed function
+                        break;
+                    case 'bulk':
+                        // Handled in renderBulkDeals
+                        break;
+                    case 'earnings':
+                        // Handled in work function
+                        break;
+                }
+                
+                playSound('cashSound');
+                addLog(`Purchased ${upgrade.name} upgrade for $${upgrade.price}`);
+                updateStats();
+                renderUpgrades();
+                showNotification(`Upgrade acquired: ${upgrade.name}`);
+                
+                // Special effects for certain upgrades
+                if (upgradeId === 'dealer') {
+                    renderBulkDeals();
+                }
+            } else {
+                showNotification("Not enough money for this upgrade!");
+            }
+        }
+
+        // Smoke/consume weed
+        function smokeWeed(productId, category) {
+            if (!gameState.inventory[productId] || gameState.inventory[productId] <= 0) {
+                showNotification("You don't have any of this left!");
+                return;
+            }
+            
+            // Find the product
+            let product = null;
+            
+            if (category === 'bulk') {
+                // For bulk deals, find the original product
+                const deal = gameState.bulkDeals.find(d => d.id === productId);
+                if (deal) {
+                    for (const cat of ['flower', 'concentrates', 'edibles']) {
+                        const found = gameState.products[cat].find(p => p.id === deal.product);
+                        if (found) {
+                            product = found;
+                            break;
+                        }
+                    }
+                }
+            } else {
+                product = gameState.products[category].find(p => p.id === productId);
+            }
+            
+            if (!product) {
+                showNotification("Invalid product");
+                return;
+            }
+            
+            // Check if you've smoked too recently
+            const now = new Date();
+            if (gameState.lastSmoked && (now - gameState.lastSmoked) < 30000) { // 30 seconds
+                showNotification("You need to wait before smoking again!");
+                return;
+            }
+            
+            // Apply effects
+            gameState.inventory[productId] -= 1;
+            
+            // Calculate actual high with tolerance
+            let effectiveHigh = Math.max(5, product.effect.high - (gameState.tolerance / 2));
+            let staminaEffect = product.effect.stamina;
             
             // Apply upgrade effects
-            Object.keys(upgrade.effects).forEach(key => {
-                towerType[key] = (towerType[key] || 0) + upgrade.effects[key];
-            });
-            
-            state.money -= upgrade.cost;
-            moneyDisplay.textContent = state.money;
-            
-            if (!state.selectedTower.upgradeIndex) {
-                state.selectedTower.upgradeIndex = 0;
-            }
-            state.selectedTower.upgradeIndex++;
-            state.selectedTower.level++;
-            
-            showMessage(`Upgrade applied: ${upgrade.name}`, 'success');
-            showUpgradeOptions(); // Refresh upgrade list
-        }
-
-        function sellTower() {
-            if (!state.selectedTower) return;
-            
-            // Refund 50% of total cost (base + upgrades)
-            const baseRefund = Math.floor(TOWER_TYPES[state.selectedTower.type].cost * 0.5);
-            const upgradeRefund = state.selectedTower.upgradeIndex * 15;
-            const refund = baseRefund + upgradeRefund;
-            
-            state.money += refund;
-            moneyDisplay.textContent = state.money;
-            
-            // Remove tower
-            const index = state.towers.indexOf(state.selectedTower);
-            state.towers.splice(index, 1);
-            state.selectedTower = null;
-            upgradeTowerBtn.disabled = true;
-            sellTowerBtn.disabled = true;
-            upgradeUI.style.display = 'none';
-            
-            showMessage(`Tower sold for $${refund}!`, 'info');
-        }
-
-        // Helper functions
-        function placeTower(x, y, type) {
-            const cost = TOWER_TYPES[type].cost;
-            if (state.money < cost) {
-                showMessage(`Not enough money! Need $${cost}`, 'error');
-                return;
-            }
-            
-            state.towers.push({
-                x, y, type,
-                cooldown: 0,
-                level: 1,
-                upgradeIndex: 0
-            });
-            
-            state.money -= cost;
-            moneyDisplay.textContent = state.money;
-            
-            showMessage(`${TOWER_TYPES[type].name} placed for $${cost}!`, 'success');
-        }
-
-        function spawnEnemy() {
-            let enemyType;
-            
-            // Spawn boss every 5 waves
-            if (state.bossActive) {
-                enemyType = ENEMY_TYPES.find(e => e.spawnEvery === 5);
-            } 
-            // Otherwise spawn regular enemies with increasing difficulty
-            else {
-                const typeIndex = Math.min(Math.floor(state.wave / 3), ENEMY_TYPES.length - 2);
-                enemyType = ENEMY_TYPES[typeIndex];
-            }
-            
-            const enemy = {
-                x: PATH[0].x,
-                y: PATH[0].y,
-                pathIndex: 1,
-                speed: enemyType.speed,
-                health: enemyType.health,
-                maxHealth: enemyType.health,
-                color: enemyType.color,
-                value: enemyType.value,
-                name: enemyType.name,
-                size: enemyType.size
-            };
-            
-            state.enemies.push(enemy);
-            state.enemiesSpawned++;
-            
-            // Show boss health bar
-            if (state.bossActive) {
-                updateBossHealthBar();
-                bossHealthBar.style.display = 'block';
-            }
-        }
-
-        function updateBossHealthBar() {
-            if (!state.bossActive || state.enemies.length === 0) {
-                bossHealthBar.style.display = 'none';
-                return;
-            }
-            
-            const boss = state.enemies[0]; // Boss is the only enemy in boss waves
-            const healthPercent = boss.health / boss.maxHealth;
-            bossHealthFill.style.width = `${healthPercent * 100}%`;
-            bossHealthText.textContent = `${boss.health}/${boss.maxHealth}`;
-        }
-
-        function removeEnemy(enemy) {
-            const index = state.enemies.indexOf(enemy);
-            if (index !== -1) {
-                state.enemies.splice(index, 1);
-                
-                // Hide boss health bar when boss is defeated
-                if (state.bossActive && state.enemies.length === 0) {
-                    bossHealthBar.style.display = 'none';
-                    state.bossActive = false;
+            if (gameState.ownedUpgrades.includes('grinder')) {
+                // Grinder makes flower more effective
+                if (category === 'flower') {
+                    effectiveHigh = Math.min(100, effectiveHigh * 1.1);
                 }
             }
+            
+            if (gameState.ownedUpgrades.includes('vape')) {
+                // Vape reduces stamina loss
+                if (category === 'flower' || category === 'concentrates') {
+                    staminaEffect = staminaEffect * 0.75;
+                }
+            }
+            
+            gameState.highness = Math.min(100, gameState.highness + effectiveHigh);
+            gameState.stamina = Math.max(0, gameState.stamina + staminaEffect);
+            gameState.tolerance = Math.min(100, gameState.tolerance + product.effect.tolerance);
+            gameState.addictionLevel = Math.min(100, gameState.addictionLevel + product.effect.addiction);
+            gameState.lastSmoked = now;
+            gameState.reputation += 1;
+            
+            playSound('smokeSound');
+            
+            // Random messages based on highness
+            let message = `You consumed ${product.name}. Feeling ${Math.round(effectiveHigh)}% higher!`;
+            
+            if (gameState.highness >= 90) {
+                message += " DUDE... YOU'RE IN SPACE...";
+            } else if (gameState.highness >= 70) {
+                message += " Whoa... everything is wavy...";
+            } else if (gameState.highness >= 50) {
+                message += " Nice buzz going on...";
+            }
+            
+            if (gameState.stamina <= 20) {
+                message += " You're exhausted...";
+            }
+            
+            if (gameState.addictionLevel >= 90) {
+                message += " You really need this...";
+            } else if (gameState.addictionLevel >= 60) {
+                message += " You're craving more...";
+            }
+            
+            addLog(message);
+            updateStats();
+            renderInventory();
         }
 
-        function findTarget(tower) {
-            const towerType = TOWER_TYPES[tower.type];
-            let target = null;
+        // Work to earn money
+        function work() {
+            if (gameState.highness > 40) {
+                showNotification("You're too high to work properly!");
+                addLog("You tried to work but were too stoned to be productive.");
+                return;
+            }
             
-            // Simple targeting - first enemy in range
-            for (const enemy of state.enemies) {
-                const dx = enemy.x - tower.x;
-                const dy = enemy.y - tower.y;
-                const distance = Math.sqrt(dx * dx + dy * dy);
-                
-                if (distance <= towerType.range) {
-                    target = enemy;
+            if (gameState.stamina < 30) {
+                showNotification("You're too tired to work!");
+                addLog("You're exhausted and need to rest before working.");
+                return;
+            }
+            
+            let earnings = 75;
+            
+            // Apply business license upgrade
+            if (gameState.ownedUpgrades.includes('business')) {
+                earnings = Math.floor(earnings * 1.2);
+            }
+            
+            gameState.money += earnings;
+            gameState.dailyEarnings += earnings;
+            gameState.stamina = Math.max(0, gameState.stamina - 25);
+            gameState.highness = Math.max(0, gameState.highness - 10);
+            
+            playSound('cashSound');
+            addLog(`You worked a shift and earned $${earnings}.`);
+            updateStats();
+            showNotification(`Earned $${earnings} from work`);
+        }
+
+        // Rest to recover stamina
+        function rest() {
+            const recovery = 40;
+            gameState.stamina = Math.min(100, gameState.stamina + recovery);
+            gameState.highness = Math.max(0, gameState.highness - 15);
+            gameState.tolerance = Math.max(0, gameState.tolerance - 5);
+            
+            addLog(`You took a nap and recovered ${recovery}% stamina.`);
+            updateStats();
+            showNotification("You feel refreshed after resting");
+        }
+
+        // Sober up
+        function soberUp() {
+            if (gameState.money < 20) {
+                showNotification("You need $20 to sober up!");
+                return;
+            }
+            
+            gameState.money -= 20;
+            gameState.highness = Math.max(0, gameState.highness - 30);
+            gameState.tolerance = Math.max(0, gameState.tolerance - 10);
+            gameState.addictionLevel = Math.max(0, gameState.addictionLevel - 5);
+            
+            addLog("You paid $20 to sober up a bit.");
+            updateStats();
+            showNotification("You feel more clear-headed now");
+        }
+
+        // Smoke a random weed from inventory
+        function smokeRandom() {
+            const available = Object.keys(gameState.inventory).filter(id => gameState.inventory[id] > 0);
+            
+            if (available.length === 0) {
+                showNotification("You don't have any weed to smoke!");
+                return;
+            }
+            
+            const randomId = available[Math.floor(Math.random() * available.length)];
+            
+            // Determine category
+            let category = null;
+            for (const cat of ['flower', 'concentrates', 'edibles']) {
+                const found = gameState.products[cat].find(p => p.id === randomId);
+                if (found) {
+                    category = cat;
                     break;
                 }
             }
             
-            return target;
-        }
-
-        function shoot(tower, target) {
-            const towerType = TOWER_TYPES[tower.type];
-            
-            const projectile = {
-                x: tower.x,
-                y: tower.y,
-                source: { x: tower.x, y: tower.y },
-                target: target,
-                speed: 5,
-                damage: towerType.damage,
-                color: towerType.color,
-                aoe: towerType.aoe
-            };
-            
-            // Add upgrade effects to projectile
-            if (towerType.pierce) projectile.pierce = true;
-            if (towerType.critChance) {
-                projectile.critChance = towerType.critChance;
-                projectile.critDamage = towerType.critDamage;
-            }
-            if (towerType.aoeRadius) projectile.aoeRadius = towerType.aoeRadius;
-            if (towerType.burnDamage) {
-                projectile.burnDamage = towerType.burnDamage;
-                projectile.burnDuration = towerType.burnDuration;
-            }
-            if (towerType.cluster) projectile.cluster = true;
-            
-            state.projectiles.push(projectile);
-        }
-
-        function isOnPath(x, y) {
-            // Simple check - more accurate would require polygon collision
-            for (let i = 0; i < PATH.length - 1; i++) {
-                const p1 = PATH[i];
-                const p2 = PATH[i + 1];
-                
-                // Check if point is near the line segment
-                if (isPointNearLine(x, y, p1.x, p1.y, p2.x, p2.y, 30)) {
-                    return true;
+            if (!category) {
+                // Check if it's a bulk deal
+                const deal = gameState.bulkDeals.find(d => d.id === randomId);
+                if (deal) {
+                    for (const cat of ['flower', 'concentrates', 'edibles']) {
+                        const found = gameState.products[cat].find(p => p.id === deal.product);
+                        if (found) {
+                            category = 'bulk';
+                            break;
+                        }
+                    }
                 }
             }
-            return false;
-        }
-
-        function isPointNearLine(px, py, x1, y1, x2, y2, radius) {
-            const dx = x2 - x1;
-            const dy = y2 - y1;
-            const length = Math.sqrt(dx * dx + dy * dy);
             
-            // Calculate projection of point onto line
-            const t = ((px - x1) * dx + (py - y1) * dy) / (length * length);
-            
-            if (t < 0) {
-                // Closest to first point
-                return Math.sqrt((px - x1) * (px - x1) + (py - y1) * (py - y1)) <= radius;
-            } else if (t > 1) {
-                // Closest to second point
-                return Math.sqrt((px - x2) * (px - x2) + (py - y2) * (py - y2)) <= radius;
+            if (category) {
+                smokeWeed(randomId, category);
             } else {
-                // Closest to somewhere in the middle
-                const projX = x1 + t * dx;
-                const projY = y1 + t * dy;
-                return Math.sqrt((px - projX) * (px - projX) + (py - projY) * (py - projY)) <= radius;
+                showNotification("Couldn't find that product");
             }
         }
 
-        function checkWaveComplete() {
-            if (state.enemiesKilled >= state.enemiesInWave && state.enemies.length === 0) {
-                state.waveInProgress = false;
-                startWaveBtn.disabled = false;
-                const moneyEarned = Math.floor(state.wave * 1.5) * 10;
-                state.money += moneyEarned;
-                moneyDisplay.textContent = state.money;
+        // Advance to next day
+        function nextDay() {
+            gameState.day += 1;
+            gameState.storeHoursLeft = 8;
+            gameState.storeOpen = true;
+            gameState.dailyEarnings = 0;
+            
+            // Natural recovery
+            gameState.stamina = Math.min(100, gameState.stamina + 20);
+            gameState.highness = Math.max(0, gameState.highness - 15);
+            gameState.tolerance = Math.max(0, gameState.tolerance - 5);
+            
+            // Withdrawal effects if addicted
+            if (gameState.addictionLevel >= 60) {
+                const withdrawal = Math.floor(gameState.addictionLevel / 10);
+                gameState.stamina = Math.max(0, gameState.stamina - withdrawal);
+                gameState.highness = Math.max(0, gameState.highness - withdrawal);
+                addLog(`You feel withdrawal effects (-${withdrawal}% stamina/highness)`);
+            }
+            
+            // Restock store every 3 days
+            if (gameState.day % 3 === 0) {
+                restockStore();
+            }
+            
+            addLog(`Day ${gameState.day} begins.`);
+            updateStats();
+            renderProducts();
+            showNotification("A new day begins!");
+        }
+
+        // Restock the store
+        function restockStore() {
+            for (const category of ['flower', 'concentrates', 'edibles']) {
+                gameState.products[category].forEach(product => {
+                    product.stock = Math.min(
+                        product.stock + Math.floor(product.popularity * 2),
+                        product.popularity * 4
+                    );
+                });
+            }
+            
+            addLog("The dispensary restocked its products.");
+            renderProducts();
+        }
+
+        // Update store hours
+        function updateStoreHours() {
+            if (gameState.storeOpen) {
+                gameState.storeHoursLeft -= 1;
                 
-                if (state.bossActive) {
-                    showMessage(`Boss defeated! Earned $${moneyEarned + 100}`, 'success');
-                } else {
-                    showMessage(`Wave ${state.wave} completed! Earned $${moneyEarned}`, 'success');
+                if (gameState.storeHoursLeft <= 0) {
+                    gameState.storeOpen = false;
+                    addLog("The dispensary has closed for the day.");
                 }
+            } else {
+                gameState.storeHoursLeft += 1;
                 
-                state.bossActive = false;
+                if (gameState.storeHoursLeft >= 8) {
+                    gameState.storeOpen = true;
+                    gameState.storeHoursLeft = 8;
+                    addLog("The dispensary has opened for business.");
+                }
+            }
+            
+            updateStats();
+        }
+
+        // Update highness visual effect
+        function updateHighEffect() {
+            const effect = document.getElementById('highEffect');
+            const text = document.getElementById('highText');
+            
+            if (gameState.highness > 70) {
+                effect.style.opacity = (gameState.highness - 70) / 30;
+                text.style.opacity = (gameState.highness - 70) / 30;
+            } else {
+                effect.style.opacity = 0;
+                text.style.opacity = 0;
             }
         }
 
-        function checkGameOver() {
-            if (state.lives <= 0) {
-                state.waveInProgress = false;
-                startWaveBtn.disabled = true;
-                showMessage(`Game Over! You reached wave ${state.wave}`, 'error');
-            }
+        // Add a message to the log
+        function addLog(message) {
+            const logEntries = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.innerHTML = `<span class="log-time">[Day ${gameState.day}]</span> ${message}`;
+            logEntries.appendChild(entry);
+            logEntries.scrollTop = logEntries.scrollHeight;
         }
 
-        function showMessage(msg, type) {
-            messageDisplay.textContent = msg;
-            messageDisplay.className = '';
-            messageDisplay.classList.add(type);
-            messageDisplay.classList.add('show');
+        // Show a notification
+        function showNotification(message) {
+            const notification = document.getElementById('notification');
+            const messageEl = document.getElementById('notification-message');
+            
+            messageEl.textContent = message;
+            notification.classList.add('show');
             
             setTimeout(() => {
-                if (messageDisplay.textContent === msg) {
-                    messageDisplay.classList.remove('show');
-                }
+                notification.classList.remove('show');
             }, 3000);
         }
 
-        // Start the game
-        init();
+        // Play a sound
+        function playSound(id) {
+            const sound = document.getElementById(id);
+            sound.currentTime = 0;
+            sound.play();
+        }
+
+        // Tab switching
+        function openTab(tabName) {
+            const tabContents = document.querySelectorAll('.tab-content');
+            const tabs = document.querySelectorAll('.tab');
+            
+            tabContents.forEach(content => {
+                content.classList.remove('active');
+            });
+            
+            tabs.forEach(tab => {
+                tab.classList.remove('active');
+            });
+            
+            document.getElementById(tabName).classList.add('active');
+            event.currentTarget.classList.add('active');
+        }
+
+        // Start the game when page loads
+        window.onload = init;
     </script>
 </body>
 </html>
